@@ -222,7 +222,7 @@ Default is programming language.")
   "(Internal) Holds the reference to result window.")
 
 (defconst leetcode--lang-suffixes
-  '(("c" . ".c") ("cpp" . ".cpp") ("csharp" . ".cs")
+  '(("bash" . ".sh") ("c" . ".c") ("cpp" . ".cpp") ("csharp" . ".cs")
     ("dart" . ".dart") ("elixir" . ".ex") ("erlang" . ".erl")
     ("golang" . ".go") ("java" . ".java") ("javascript" . ".js")
     ("kotlin" . ".kt") ("php" . ".php") ("python" . ".py") ("python3" . ".py")
