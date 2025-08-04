@@ -237,6 +237,7 @@ python3, ruby, rust, scala, swift, mysql, mssql, oraclesql.")
 (defconst leetcode--code-end "// code_end"
   "Code end mark in LeetCode description.")
 
+(defvar leetcode--filter-status nil "Filter rows by status.")
 (defvar leetcode--filter-regex nil "Filter rows by regex.")
 (defvar leetcode--filter-tag nil "Filter rows by tag.")
 (defvar leetcode--filter-difficulty nil
@@ -245,6 +246,7 @@ python3, ruby, rust, scala, swift, mysql, mssql, oraclesql.")
 (defconst leetcode--all-difficulties '("Easy" "Medium" "Hard"))
 (defconst leetcode--paid "•" "Paid mark.")
 (defconst leetcode--checkmark "✓" "Checkmark for accepted problem.")
+(defconst leetcode--all-statuses '("-" "✗" "✓") "All problem status.")
 (defconst leetcode--buffer-name             "*leetcode*")
 
 (defface leetcode-paid-face
@@ -757,7 +759,9 @@ Return a list of rows, each row is a vector:
       (if (or leetcode--display-paid (not (leetcode-problem-paid-only p)))
           (let* ((p-status (if (equal (leetcode-problem-status p) "ac")
                                (leetcode--add-font-lock leetcode--checkmark 'leetcode-checkmark-face)
-                             " "))
+                             (if (equal (leetcode-problem-status p) "notac")
+                                 (leetcode--add-font-lock "✗" 'leetcode-error-face)
+                               "-")))
                  (p-id (leetcode-problem-id p))
                  (p-title (concat
                            (leetcode-problem-title p)
@@ -780,10 +784,14 @@ Return a list of rows, each row is a vector:
   (aref row 4))
 
 (defun leetcode--filter (rows)
-  "Filter ROWS by `leetcode--filter-regex', `leetcode--filter-tag' and `leetcode--filter-difficulty'."
+  "Filter ROWS by `leetcode--filter-status',  `leetcode--filter-regex', `leetcode--filter-tag' and `leetcode--filter-difficulty'."
   (seq-filter
    (lambda (row)
      (and
+      (if leetcode--filter-status
+          (let ((status (aref row 0)))
+            (string= status leetcode--filter-status))
+        t)
       (if leetcode--filter-regex
           (let ((title (aref row 2)))
             (string-match-p leetcode--filter-regex title))
@@ -807,6 +815,14 @@ Return a list of rows, each row is a vector:
   (setq leetcode--filter-regex nil)
   (setq leetcode--filter-tag nil)
   (setq leetcode--filter-difficulty nil)
+  (setq leetcode--filter-status nil)
+  (leetcode-refresh))
+
+(defun leetcode-set-filter-status ()
+  "Set `leetcode--filter-status' from `leetcode--all-statuses' and refresh."
+  (interactive)
+  (setq leetcode--filter-status
+        (completing-read "Status: " leetcode--all-statuses))
   (leetcode-refresh))
 
 (defun leetcode-set-filter-regex (regex)
@@ -1445,6 +1461,7 @@ It will restore the layout based on current buffer's name."
       (define-key map "c" #'leetcode-solve-current-problem)
       (define-key map "C" #'leetcode-solve-problem)
       (define-key map "s" #'leetcode-set-filter-regex)
+      (define-key map "S" #'leetcode-set-filter-status)
       (define-key map "L" #'leetcode-set-prefer-language)
       (define-key map "t" #'leetcode-set-filter-tag)
       (define-key map "T" #'leetcode-toggle-tag-display)
